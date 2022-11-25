@@ -1,6 +1,6 @@
 package backend.bankaccount.web.app.controller;
 
-import backend.bankaccount.web.app.domain.dto.DateRange;
+import backend.bankaccount.web.app.domain.dto.DateRangeDTO;
 import backend.bankaccount.web.app.domain.dto.TransactionDTO;
 import backend.bankaccount.web.app.service.repo.ReportService;
 import org.springframework.web.bind.annotation.*;
@@ -19,9 +19,9 @@ public class ReportController {
     }
 
     @GetMapping("/{id}/client")
-    public List<TransactionDTO> getReportByClientByDate(@PathVariable long id, @RequestBody DateRange dateRange){
+    public List<TransactionDTO> getReportByClientByDate(@PathVariable long id, @RequestBody DateRangeDTO dateRangeDTO){
 
-        return reportService.getBankStatement(id, dateRange.getDate1(), dateRange.getDate2());
+        return reportService.getBankStatement(id, dateRangeDTO.getDate1(), dateRangeDTO.getDate2());
 
     }
 }

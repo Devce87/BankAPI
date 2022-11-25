@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class DateRange {
+public class DateRangeDTO {
 
     String date1;
     String date2;
