@@ -28,14 +28,17 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public List<TransactionDTO> getBankStatement(long id, String initialDate, String finalDate) {
 
-//        ChronoLocalDate firstDate = LocalDate.parse(initialDate);
-//        ChronoLocalDate secondDate = LocalDate.parse(finalDate);
+//
         LocalDate firstDate = LocalDate.parse(initialDate);
         LocalDate secondDate = LocalDate.parse(finalDate);
 
-        return transactionService.getAllTransactionsByClient(id).stream()
+        return transactionService.getAllTransactionsByClient(id)
+                .stream()
                 .filter
-                        (tDate -> LocalDate.parse(tDate.getDate()).isAfter(firstDate) && LocalDate.parse(tDate.getDate()).isBefore(secondDate)).collect(Collectors.toList());
+                        (tDate ->
+                                LocalDate.parse(tDate.getDate()).isAfter(firstDate)
+                                        && LocalDate.parse(tDate.getDate()).isBefore(secondDate))
+                .collect(Collectors.toList());
 
     }
 }
