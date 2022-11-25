@@ -6,8 +6,8 @@ import backend.bankaccount.web.app.domain.entity.Account;
 import backend.bankaccount.web.app.domain.entity.Transaction;
 import backend.bankaccount.web.app.exception.ExceptionMessage;
 import backend.bankaccount.web.app.mapper.TransactionMapper;
-import backend.bankaccount.web.app.repo.AccountRepository;
-import backend.bankaccount.web.app.repo.TransactionRepository;
+import backend.bankaccount.web.app.domain.repo.AccountRepository;
+import backend.bankaccount.web.app.domain.repo.TransactionRepository;
 import backend.bankaccount.web.app.service.repo.TransactionService;
 import org.springframework.stereotype.Service;
 

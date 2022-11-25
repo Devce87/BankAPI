@@ -1,4 +1,4 @@
-package backend.bankaccount.web.app.repo;
+package backend.bankaccount.web.app.domain.repo;
 
 import backend.bankaccount.web.app.domain.entity.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;

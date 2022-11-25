@@ -7,7 +7,7 @@ import backend.bankaccount.web.app.exception.ClientNotFoundException;
 import backend.bankaccount.web.app.exception.ExceptionMessage;
 import backend.bankaccount.web.app.mapper.AccountMapper;
 import backend.bankaccount.web.app.mapper.ClientMapper;
-import backend.bankaccount.web.app.repo.ClientRepository;
+import backend.bankaccount.web.app.domain.repo.ClientRepository;
 import backend.bankaccount.web.app.service.repo.ClientService;
 import org.springframework.stereotype.Service;
 import java.util.List;

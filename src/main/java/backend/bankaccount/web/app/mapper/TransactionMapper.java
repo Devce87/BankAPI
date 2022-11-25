@@ -4,11 +4,17 @@ import backend.bankaccount.web.app.domain.dto.TransactionDTO;
 import backend.bankaccount.web.app.domain.entity.Transaction;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 
 @Component
 public class TransactionMapper implements DefaultMapper<Transaction, TransactionDTO> {
+
+    private final AccountMapper accountMapper;
+
+    public TransactionMapper(AccountMapper accountMapper) {
+        this.accountMapper = accountMapper;
+    }
+
     @Override
     public TransactionDTO entityToDTO(Transaction transaction) {
         return TransactionDTO.builder()
@@ -16,6 +22,7 @@ public class TransactionMapper implements DefaultMapper<Transaction, Transaction
                 .transactionType(transaction.getTransactionType())
                 .transactionAmount(transaction.getTransactionAmount())
                 .accountBalance(transaction.getAccountBalance())
+                .accountDTO(accountMapper.entityToDTO(transaction.getAccount()))
                 .build();
     }
 

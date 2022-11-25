@@ -34,8 +34,7 @@ public class ReportServiceImpl implements ReportService {
 
         return transactionService.getAllTransactionsByClient(id)
                 .stream()
-                .filter
-                        (tDate ->
+                .filter(tDate ->
                                 LocalDate.parse(tDate.getDate()).isAfter(firstDate)
                                         && LocalDate.parse(tDate.getDate()).isBefore(secondDate))
                 .collect(Collectors.toList());

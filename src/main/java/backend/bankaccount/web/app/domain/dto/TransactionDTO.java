@@ -14,4 +14,5 @@ public class TransactionDTO {
     private TransactionType transactionType;
     private Double transactionAmount;
     private Double accountBalance;
+    private AccountDTO accountDTO;
 }
