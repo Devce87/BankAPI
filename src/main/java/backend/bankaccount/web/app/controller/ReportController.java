@@ -2,7 +2,7 @@ package backend.bankaccount.web.app.controller;
 
 import backend.bankaccount.web.app.domain.dto.DateRangeDTO;
 import backend.bankaccount.web.app.domain.dto.TransactionDTO;
-import backend.bankaccount.web.app.service.repo.ReportService;
+import backend.bankaccount.web.app.service.contract.ReportService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

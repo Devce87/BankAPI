@@ -3,15 +3,19 @@ package backend.bankaccount.web.app.domain.entity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Data
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @SuperBuilder
+@Where(clause = "deleted = false")
 @NoArgsConstructor
 public class Person {
 
@@ -31,7 +35,11 @@ public class Person {
     @Embedded
     private Address address;
 
+    @NotBlank
+    @Size(min=10, max = 10, message = "Input a 10 digits phone number")
     private String phoneNumber;
 
     private boolean deleted = Boolean.FALSE;
+
+
 }

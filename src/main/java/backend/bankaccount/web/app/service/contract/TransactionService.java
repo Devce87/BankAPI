@@ -1,4 +1,4 @@
-package backend.bankaccount.web.app.service.repo;
+package backend.bankaccount.web.app.service.contract;
 
 import java.util.List;
 

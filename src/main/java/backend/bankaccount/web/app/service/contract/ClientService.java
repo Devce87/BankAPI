@@ -1,4 +1,4 @@
-package backend.bankaccount.web.app.service.repo;
+package backend.bankaccount.web.app.service.contract;
 
 import backend.bankaccount.web.app.domain.dto.AccountDTO;
 import backend.bankaccount.web.app.domain.dto.ClientDTO;
@@ -18,7 +18,7 @@ public interface ClientService<T> {
 
     void deleteClient(Long id);
 
-    void addClientAccount(AccountDTO accountDTO, Long clientId);
+//    void addClientAccount(AccountDTO accountDTO, Long clientId);
 
 
 }

@@ -2,7 +2,7 @@ package backend.bankaccount.web.app.controller;
 
 import backend.bankaccount.web.app.domain.dto.TransactionDTO;
 import backend.bankaccount.web.app.mapper.TransactionMapper;
-import backend.bankaccount.web.app.service.repo.TransactionService;
+import backend.bankaccount.web.app.service.contract.TransactionService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;

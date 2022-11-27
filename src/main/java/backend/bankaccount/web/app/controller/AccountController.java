@@ -2,8 +2,9 @@ package backend.bankaccount.web.app.controller;
 
 import backend.bankaccount.web.app.domain.dto.AccountDTO;
 import backend.bankaccount.web.app.domain.dto.TransactionDTO;
-import backend.bankaccount.web.app.service.repo.AccountService;
-import backend.bankaccount.web.app.service.repo.TransactionService;
+import backend.bankaccount.web.app.service.contract.AccountService;
+import backend.bankaccount.web.app.service.contract.TransactionService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
@@ -37,7 +38,7 @@ public class AccountController {
     @PostMapping("/{accountId}/transaction")
     public ResponseEntity<?> addAccountTransaction(@PathVariable Long accountId, @RequestBody @Valid TransactionDTO transactionDTO){
         transactionService.addTransaction(accountId, transactionDTO);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PutMapping("/{id}")

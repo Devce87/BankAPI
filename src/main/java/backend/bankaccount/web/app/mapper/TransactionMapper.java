@@ -22,7 +22,8 @@ public class TransactionMapper implements DefaultMapper<Transaction, Transaction
                 .transactionType(transaction.getTransactionType())
                 .transactionAmount(transaction.getTransactionAmount())
                 .accountBalance(transaction.getAccountBalance())
-                .accountDTO(accountMapper.entityToDTO(transaction.getAccount()))
+                .account(accountMapper.entityToDTO(transaction.getAccount()))
+                .name(transaction.getAccount().getClient().getName())
                 .build();
     }
 

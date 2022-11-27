@@ -3,8 +3,9 @@ package backend.bankaccount.web.app.controller;
 import backend.bankaccount.web.app.domain.dto.AccountDTO;
 import backend.bankaccount.web.app.domain.dto.ClientDTO;
 import backend.bankaccount.web.app.mapper.ClientMapper;
-import backend.bankaccount.web.app.service.repo.AccountService;
-import backend.bankaccount.web.app.service.repo.ClientService;
+import backend.bankaccount.web.app.service.contract.AccountService;
+import backend.bankaccount.web.app.service.contract.ClientService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +28,7 @@ public class ClientController {
     @PostMapping()
     public ResponseEntity<?> addClient(@RequestBody @Valid ClientDTO clientDTO){
         clientService.addClient(clientDTO);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/{id}")
@@ -36,9 +37,8 @@ public class ClientController {
     }
 
     @GetMapping
-    public List<ClientDTO> getAllClients(){
-        return clientService.getAllClients();
-
+    public ResponseEntity<List<ClientDTO>> getAllClients(){
+        return ResponseEntity.ok(clientService.getAllClients());
     }
 
     @PostMapping("/{clientId}/account")

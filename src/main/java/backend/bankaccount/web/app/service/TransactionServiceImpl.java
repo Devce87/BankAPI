@@ -4,21 +4,22 @@ import backend.bankaccount.web.app.constants.TransactionType;
 import backend.bankaccount.web.app.domain.dto.TransactionDTO;
 import backend.bankaccount.web.app.domain.entity.Account;
 import backend.bankaccount.web.app.domain.entity.Transaction;
-import backend.bankaccount.web.app.exception.ExceptionMessage;
+import backend.bankaccount.web.app.exception.BalanceException;
+import backend.bankaccount.web.app.exception.CustomNotFoundException;
 import backend.bankaccount.web.app.mapper.TransactionMapper;
 import backend.bankaccount.web.app.domain.repo.AccountRepository;
 import backend.bankaccount.web.app.domain.repo.TransactionRepository;
-import backend.bankaccount.web.app.service.repo.TransactionService;
+import backend.bankaccount.web.app.service.contract.TransactionService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class TransactionServiceImpl implements TransactionService<TransactionDTO> {
-
+    private static final Double DAILY_MAX_WITHDRAWAL = 1000D;
     private final TransactionRepository transactionRepository;
 
     private final AccountRepository accountRepository;
@@ -34,14 +35,31 @@ public class TransactionServiceImpl implements TransactionService<TransactionDTO
 
     public void addTransaction(Long accountId, TransactionDTO transactionDTO) {
 
-        Transaction transaction = transactionMapper.DTOtoEntity(transactionDTO);
-        Account account = accountRepository.findById(accountId).orElseThrow(() -> new ExceptionMessage("Account not found."));
-        transaction.setAccount(account);
+        try {
+            Transaction transaction = transactionMapper.DTOtoEntity(transactionDTO);
+            Account account = accountRepository.findById(accountId).orElseThrow(() -> new CustomNotFoundException("Account not found."));
 
-        transactionManager(transaction, account);
+            if(account.getTransactionList().isEmpty()){
+                account.setBalance(account.getInitialAmount());
+            }
 
-        transactionRepository.save(transaction);
+            transaction.setAccount(account);
 
+            try {
+                transactionManager(transaction, account);
+                log.info("Transaction amount: {} authorized successfully", transactionDTO.getTransactionAmount());
+
+            } catch (Exception ex) {
+                log.error("An error occurred while trying to authorize Transaction amount: {}", transactionDTO.getTransactionAmount(), ex);
+            }
+
+            transactionRepository.save(transaction);
+            log.info("Transaction for {} saved successfully", transactionDTO.getTransactionAmount());
+
+        } catch (CustomNotFoundException ex) {
+            log.error("An error occurred while trying to save Transaction amount: {}", transactionDTO.getTransactionAmount(), ex);
+            throw new CustomNotFoundException("Account not found");
+        }
     }
 
 
@@ -49,7 +67,7 @@ public class TransactionServiceImpl implements TransactionService<TransactionDTO
         List<Transaction> transactions = transactionRepository.findAll();
 
         if (transactions.isEmpty())
-            throw new ExceptionMessage("There are no transactions on record");
+            throw new CustomNotFoundException("There are no transactions on record");
 
         return transactions.stream().map(transactionMapper::entityToDTO).collect(Collectors.toList());
     }
@@ -57,11 +75,16 @@ public class TransactionServiceImpl implements TransactionService<TransactionDTO
     @Override
     public List<TransactionDTO> getAllTransactionsByClient(Long clientId) {
 
-        return transactionRepository.findAll()
+        List<TransactionDTO> transactionDTOS =transactionRepository.findAll()
                 .stream()
                 .filter(transaction ->
-                        transaction.getAccount().getClient().getId().equals(clientId))
+                        (transaction.getAccount().getClient().getId().equals(clientId)))
                 .map(transactionMapper::entityToDTO).collect(Collectors.toList());
+
+        if(transactionDTOS.isEmpty())
+            throw new CustomNotFoundException("Client does not have transactions");
+
+        return transactionDTOS;
 
     }
 
@@ -71,42 +94,51 @@ public class TransactionServiceImpl implements TransactionService<TransactionDTO
 
     private Transaction findTransactionById(Long id) {
         return transactionRepository.findById(id)
-                .orElseThrow(() -> new ExceptionMessage("Transaction not found."));
+                .orElseThrow(() -> new CustomNotFoundException("Transaction not found."));
 
     }
 
-    public void transactionManager(Transaction transaction, Account account){
+    private void transactionManager(Transaction transaction, Account account){
 
+        double withdrawalsToday = getWithdrawalsToday();
+
+        //Deposits
         if (transaction.getTransactionType().equals(TransactionType.Deposit)) {
+
             account.setBalance(account.getBalance() + transaction.getTransactionAmount());
             transaction.setAccountBalance(account.getBalance());
 
         } else if (transaction.getTransactionType().equals(TransactionType.Withdrawal)) {
 
-            double dailyMaxWithdrawals = 1000D;
+            //Withdrawals
+            if (account.getBalance() == 0) {
+                throw new BalanceException("No balance available.");
 
-            Double withdrawalsToday = getAllTransactions().stream()
+            } else if (account.getBalance() - transaction.getTransactionAmount() < 0) {
+                throw new BalanceException("Insufficient funds.");
+
+            }  else if(withdrawalsToday - transaction.getTransactionAmount() > DAILY_MAX_WITHDRAWAL)
+                throw new BalanceException("You have exceeded the max withdrawal amount" + DAILY_MAX_WITHDRAWAL+" today.");
+
+            }else if (account.getBalance() - transaction.getTransactionAmount() >= 0) {
+                account.setBalance(account.getBalance() - transaction.getTransactionAmount());
+                transaction.setAccountBalance(account.getBalance());
+
+        }
+    }
+
+
+    private double getWithdrawalsToday() {
+        double withdrawalsToday=0;
+
+        if(!transactionRepository.findAll().isEmpty()){
+            withdrawalsToday  = getAllTransactions().stream()
                     .filter(tDate -> (LocalDate.parse(tDate.getDate())).isEqual(LocalDate.now()))
                     .filter(tType -> tType.getTransactionType().equals(TransactionType.Withdrawal))
                     .map(TransactionDTO::getTransactionAmount)
                     .reduce((double) 0, Double::sum);
-
-            if (account.getBalance() == 0) {
-                throw new ExceptionMessage("No balance available.");
-
-            } else if (account.getBalance() - transaction.getTransactionAmount() < 0) {
-                throw new ExceptionMessage("Insufficient funds.");
-
-            } else if ((withdrawalsToday - transaction.getTransactionAmount()) > dailyMaxWithdrawals) {
-                throw new ExceptionMessage("Max daily withdrawal amount exceeded.");
-
-            } else if (account.getBalance() - transaction.getTransactionAmount() >= 0) {
-                account.setBalance(account.getBalance() - transaction.getTransactionAmount());
-                transaction.setAccountBalance(account.getBalance());
-
-            }
-
         }
+        return withdrawalsToday;
     }
 
 }
