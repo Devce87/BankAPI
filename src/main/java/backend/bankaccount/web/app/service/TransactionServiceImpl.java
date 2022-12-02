@@ -32,29 +32,24 @@ public class TransactionServiceImpl implements TransactionService<TransactionDTO
         this.transactionMapper = transactionMapper;
     }
 
-
     public void addTransaction(Long accountId, TransactionDTO transactionDTO) {
 
         try {
             Transaction transaction = transactionMapper.DTOtoEntity(transactionDTO);
             Account account = accountRepository.findById(accountId).orElseThrow(() -> new CustomNotFoundException("Account not found."));
 
-            if(account.getTransactionList().isEmpty()){
+            if (account.getTransactionList().isEmpty()) {
                 account.setBalance(account.getInitialAmount());
             }
 
             transaction.setAccount(account);
 
-            try {
-                transactionManager(transaction, account);
-                log.info("Transaction amount: {} authorized successfully", transactionDTO.getTransactionAmount());
-
-            } catch (Exception ex) {
-                log.error("An error occurred while trying to authorize Transaction amount: {}", transactionDTO.getTransactionAmount(), ex);
-            }
+            //Bug fixed: --> removed nested try catch, to avoid saving when transactionManager fails.
+            //However, error could work as a transaction attempt logger since it doesn't update account.
+            transactionManager(transaction, account);
+            log.info("Transaction amount: {} authorized successfully", transactionDTO.getTransactionAmount());
 
             transactionRepository.save(transaction);
-            log.info("Transaction for {} saved successfully", transactionDTO.getTransactionAmount());
 
         } catch (CustomNotFoundException ex) {
             log.error("An error occurred while trying to save Transaction amount: {}", transactionDTO.getTransactionAmount(), ex);
@@ -75,13 +70,13 @@ public class TransactionServiceImpl implements TransactionService<TransactionDTO
     @Override
     public List<TransactionDTO> getAllTransactionsByClient(Long clientId) {
 
-        List<TransactionDTO> transactionDTOS =transactionRepository.findAll()
+        List<TransactionDTO> transactionDTOS = transactionRepository.findAll()
                 .stream()
                 .filter(transaction ->
                         (transaction.getAccount().getClient().getId().equals(clientId)))
                 .map(transactionMapper::entityToDTO).collect(Collectors.toList());
 
-        if(transactionDTOS.isEmpty())
+        if (transactionDTOS.isEmpty())
             throw new CustomNotFoundException("Client does not have transactions");
 
         return transactionDTOS;
@@ -98,41 +93,45 @@ public class TransactionServiceImpl implements TransactionService<TransactionDTO
 
     }
 
-    private void transactionManager(Transaction transaction, Account account){
+    private void transactionManager(Transaction transaction, Account account) {
+        log.info("Transaction Manager");
 
         double withdrawalsToday = getWithdrawalsToday();
 
         //Deposits
         if (transaction.getTransactionType().equals(TransactionType.Deposit)) {
+            log.info("1");
 
             account.setBalance(account.getBalance() + transaction.getTransactionAmount());
             transaction.setAccountBalance(account.getBalance());
 
         } else if (transaction.getTransactionType().equals(TransactionType.Withdrawal)) {
-
+            log.info("Checking withdrawals.");
             //Withdrawals
+
             if (account.getBalance() == 0) {
                 throw new BalanceException("No balance available.");
 
             } else if (account.getBalance() - transaction.getTransactionAmount() < 0) {
                 throw new BalanceException("Insufficient funds.");
 
-            }  else if(withdrawalsToday - transaction.getTransactionAmount() > DAILY_MAX_WITHDRAWAL)
-                throw new BalanceException("You have exceeded the max withdrawal amount" + DAILY_MAX_WITHDRAWAL+" today.");
+            } else if (withdrawalsToday - transaction.getTransactionAmount() > DAILY_MAX_WITHDRAWAL) {
+                throw new BalanceException("You have exceeded the max withdrawal amount " + DAILY_MAX_WITHDRAWAL + " today.");
 
-            }else if (account.getBalance() - transaction.getTransactionAmount() >= 0) {
+            } else if (account.getBalance() - transaction.getTransactionAmount() >= 0) {
+                log.info("Withdrawing balance.");
                 account.setBalance(account.getBalance() - transaction.getTransactionAmount());
                 transaction.setAccountBalance(account.getBalance());
-
+            }
         }
     }
 
 
     private double getWithdrawalsToday() {
-        double withdrawalsToday=0;
+        double withdrawalsToday = 0;
 
-        if(!transactionRepository.findAll().isEmpty()){
-            withdrawalsToday  = getAllTransactions().stream()
+        if (!transactionRepository.findAll().isEmpty()) {
+            withdrawalsToday = getAllTransactions().stream()
                     .filter(tDate -> (LocalDate.parse(tDate.getDate())).isEqual(LocalDate.now()))
                     .filter(tType -> tType.getTransactionType().equals(TransactionType.Withdrawal))
                     .map(TransactionDTO::getTransactionAmount)

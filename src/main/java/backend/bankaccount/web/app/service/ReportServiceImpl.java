@@ -2,7 +2,6 @@ package backend.bankaccount.web.app.service;
 
 import backend.bankaccount.web.app.domain.dto.TransactionDTO;
 import backend.bankaccount.web.app.exception.NoTransactionsForDateRange;
-
 import backend.bankaccount.web.app.service.contract.ReportService;
 import backend.bankaccount.web.app.service.contract.TransactionService;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +15,6 @@ import java.util.stream.Collectors;
 public class ReportServiceImpl implements ReportService {
 
     private final TransactionService<TransactionDTO> transactionService;
-
 
     public ReportServiceImpl(TransactionService<TransactionDTO> transactionService) {
         this.transactionService = transactionService;
@@ -47,9 +45,8 @@ public class ReportServiceImpl implements ReportService {
         }
         return transactionService.getAllTransactionsByClient(id)
                 .stream()
-                .filter(tDate ->
-                        LocalDate.parse(tDate.getDate()).isAfter(firstDate)
-                                && LocalDate.parse(tDate.getDate()).isBefore(secondDate))
+                .filter(tDate ->        //Bug fixed: changed "isAfter" and "isBefore" with: equals. And && for ||
+                        LocalDate.parse(tDate.getDate()).equals(firstDate) || LocalDate.parse(tDate.getDate()).equals(secondDate))
                 .collect(Collectors.toList());
     }
 }
